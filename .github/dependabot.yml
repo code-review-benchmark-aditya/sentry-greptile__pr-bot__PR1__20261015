@@ -29,6 +29,11 @@ updates:
           - '@react-stately/*'
           - '@react-aria/*'
           - '@react-types/*'
+          # Umbrella meta-packages that the granular @react-aria/@react-stately
+          # packages delegate their implementation through, so bumps of those
+          # entry points stay in this group instead of arriving ungrouped.
+          - 'react-aria'
+          - 'react-stately'
       emotion-dependencies:
         patterns:
           - '@emotion/*'
