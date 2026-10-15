@@ -1,7 +1,6 @@
-import {useState} from 'react';
+import {lazy, Suspense, useState} from 'react';
 import {createBrowserRouter, RouterProvider} from 'react-router-dom';
 import {wrapCreateBrowserRouterV6} from '@sentry/react';
-import {ReactQueryDevtools} from '@tanstack/react-query-devtools';
 
 import {AppQueryClientProvider} from 'sentry/appQueryClient';
 import {OnboardingContextProvider} from 'sentry/components/onboarding/onboardingContext';
@@ -11,6 +10,15 @@ import {routes} from 'sentry/routes';
 import {DANGEROUS_SET_REACT_ROUTER_6_HISTORY} from 'sentry/utils/browserHistory';
 
 import {buildReactRouter6Routes} from './utils/reactRouter6Compat/router';
+
+// The devtools (and the devtools runtime they depend on) are only ever useful
+// when USE_REACT_QUERY_DEVTOOL is set, so they are loaded lazily: this keeps
+// them out of the entry bundle and out of the production chunk.
+const ReactQueryDevtools = lazy(() =>
+  import('@tanstack/react-query-devtools').then(module => ({
+    default: module.ReactQueryDevtools,
+  }))
+);
 
 function buildRouter(SentryHooksProvider?: React.ComponentType<React.PropsWithChildren>) {
   const sentryCreateBrowserRouter = wrapCreateBrowserRouterV6(createBrowserRouter);
@@ -34,7 +42,9 @@ function Main(props: {
           <RouterProvider router={router} />
         </OnboardingContextProvider>
         {USE_REACT_QUERY_DEVTOOL && (
-          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+          <Suspense fallback={null}>
+            <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+          </Suspense>
         )}
       </ThemeAndStyleProvider>
     </AppQueryClientProvider>
